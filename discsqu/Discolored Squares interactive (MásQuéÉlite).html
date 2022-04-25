@@ -10,6 +10,7 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script src="js/ruleseed.js"></script>
+    <script src="live.js"></script>
     <style>
         ul {
             padding-left: 1.5em;
@@ -350,7 +351,7 @@
 
             $resetButton.click(resetAll);
             $layerButton.click(makeTable);
-            //$(window).on("beforeunload", ()=>"");
+            $(window).on("beforeunload", ()=>"");
             resetAll();
 
             /* moar data. */
@@ -439,11 +440,10 @@
                 <h4>Instructions:</h4>
                 <ul>
                     <li>Click a color and then on a cell to color that cell with said color.</li>
-                    <li>Click on that cell again with the same color to toggle its 'pressed' state.</li>
-                    <li>Right-click on that cell to delete its color (it won't delete the selection).</li>
-                    <li>Alternatively, you can also click the blank square to delete the color.</li>
-                    <li>Create layers on top of each other by pressing 'Next stage'.</li>
-                    <li>You can switch to other stage/layer by pressing the numbered buttons.</li>
+                    <li>When you're happy setting up your initial colors, click 'Next stage'.</li>
+                    <li>Now, you will be able to color any square with any color.</li>
+                    <li>REMEMBER to check any pressed square as white before moving on.</li>
+                    <li>Do not fear: you can also move from stage to stage at any point.</li>
                     <li>Press 'Reset' to reset the colors, stages/layers, and the selection.</li>
                 </ul>
             </div>
