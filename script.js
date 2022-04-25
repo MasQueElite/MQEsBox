@@ -1,1 +1,1 @@
-document.body.textContent = document.body.textContent.trim() + "...";
+//document.body.textContent = document.body.textContent.trim() + "...";
