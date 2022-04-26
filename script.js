@@ -1,1 +1,3 @@
-//document.body.textContent = document.body.textContent.trim() + "...";
+const p = document.createElement("p");
+p.textContent = "under construction...";
+document.body.append(p);
