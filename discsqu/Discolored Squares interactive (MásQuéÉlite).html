@@ -253,16 +253,20 @@
                 resetZIndex();
                 tables$[indexOfButtonPressed].css("z-index", "9999");
 
-                $pageButtons.css({"border": "","border-radius": ""}); /* all elements */
-                $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); /* one element */
+                $pageButtons.css({"border": "","border-radius": ""}); //all elements
+                $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); //one element
 
+                doTopTableChanges();
+            }
+
+            function doTopTableChanges() {               
                 /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
                 if (indexOfButtonPressed) {
                     $(tables$).each((i,e) => {
                         if (i) e.css("visibility", "visible")
                     });
                     tables$[0].css("visibility", "hidden");
-                    tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]); 
+                    tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
                 }
                 else {
                     $(tables$).each((i,e) => {
@@ -272,10 +276,11 @@
                 }
                 if (indexOfButtonPressed <= 1) return;
                 cells$[indexOfButtonPressed-1].each(function() {
-                    const th = $(this);
-                    console.log(th);
-                    if (th.css("background-color") !== "rgb(230, 230, 230)")
-                        th.css("background-color", "rgba(0, 0, 0, 0)");
+                    const t = $(this);
+                    if (t.css("background-color") !== "rgb(230, 230, 230)")
+                        t.css("background-color", "rgba(0, 0, 0, 0)");
+                    else
+                        t.text("X");
                 });
             }
 
@@ -321,7 +326,6 @@
                         if (!indexOfButtonPressed) {
                             /* No more than 4 buttons can be pressed on this layer, and only unique colors can be here. It also can't be the gray color. */
                             if (!colorsPressed.includes("") || colorsPressed.includes(currentColor) || currentColor === "rgb(230, 230, 230)") return;
-                            /* Register the color pressed. */
                             /* Returns the lowerst number that is not present on the table. (i.e. numbersShown) */
                             let decideShownNumber = () => {
                                 for (let i = 1; i <= 4; i++)
@@ -351,7 +355,7 @@
 
             $resetButton.click(resetAll);
             $layerButton.click(makeTable);
-            $(window).on("beforeunload", ()=>"");
+            //$(window).on("beforeunload", ()=>"");
             resetAll();
 
             /* moar data. */
@@ -440,10 +444,11 @@
                 <h4>Instructions:</h4>
                 <ul>
                     <li>Click a color and then on a cell to color that cell with said color.</li>
-                    <li>When you're happy setting up your initial colors, click 'Next stage'.</li>
-                    <li>Now, you will be able to color any square with any color.</li>
-                    <li>REMEMBER to check any pressed square as white before moving on.</li>
-                    <li>Do not fear: you can also move from stage to stage at any point.</li>
+                    <li>Click on that cell again with the same color to toggle its 'pressed' state.</li>
+                    <li>Right-click on that cell to delete its color (it won't delete the selection).</li>
+                    <li>Alternatively, you can also click the blank square to delete the color.</li>
+                    <li>Create layers on top of each other by pressing 'Next stage'.</li>
+                    <li>You can switch to other stage/layer by pressing the numbered buttons.</li>
                     <li>Press 'Reset' to reset the colors, stages/layers, and the selection.</li>
                 </ul>
             </div>
