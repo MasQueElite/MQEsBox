@@ -259,8 +259,8 @@
                 doTopTableChanges();
             }
 
-            function doTopTableChanges() {               
-                /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
+            function doTopTableChanges() {   
+                /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage */
                 if (indexOfButtonPressed) {
                     $(tables$).each((i,e) => {
                         if (i) e.css("visibility", "visible")
@@ -274,6 +274,9 @@
                     });
                     tables$[0].css("visibility", "visible");
                 }
+                /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
+                tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
+                /* Code for removing any squares but white ones */
                 if (indexOfButtonPressed <= 1) return;
                 cells$[indexOfButtonPressed-1].each(function() {
                     const t = $(this);
