@@ -230,6 +230,15 @@
             let colorsPressed = Array.from({length:4},e=>"");
             /* A registry reflecting which numbers the table already has (again, in the 0th stage). */
             let numbersShown = Array.from({length:4},e=>false);
+            let alreadyPressed = [];
+            /* moar data. 
+               I would've added this to the bottom but TDZ's exist*/
+            const stages = [
+                [5, 12, 1, 15, 14, 13, 7, 3, 9, 4, 6, 10, 16, 2, 8, 11],
+                [1, 14, 6, 7, 12, 15, 3, 10, 16, 4, 2, 11, 9, 8, 13, 5],
+                [16, 9, 7, 12, 6, 15, 3, 5, 11, 8, 13, 14, 2, 10, 1, 4],
+                [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
+            ];
 
             $colors.click(e => {
                 const t = $(e.target);
@@ -260,7 +269,7 @@
             }
 
             function doTopTableChanges() {   
-                /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage */
+                /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
                 if (indexOfButtonPressed) {
                     $(tables$).each((i,e) => {
                         if (i) e.css("visibility", "visible")
@@ -276,15 +285,37 @@
                 }
                 /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
                 tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
-                /* Code for removing any squares but white ones */
+                /* Code for removing any squares but white ones. */
+
                 if (indexOfButtonPressed <= 1) return;
-                cells$[indexOfButtonPressed-1].each(function() {
+
+                const pressedNow = [];
+                cells$[indexOfButtonPressed-1].each(function(i) {
                     const t = $(this);
                     if (t.css("background-color") !== "rgb(230, 230, 230)")
                         t.css("background-color", "rgba(0, 0, 0, 0)");
                     else
+                    {
                         t.text("X");
+                    }
                 });
+            }
+
+            function setCorrespondentNumbers(r) {
+                /* The target numbers for the current stage. */
+                const stageNumbers = stages[indexOfButtonPressed-1];
+                // The pressed ELEMENTS.
+                const $pressedSquares = cells$[indexOfButtonPressed].filter(function() {
+                    return $(this).css("background-color") == "rgb(230, 230, 230)"
+                });
+                // The INDEX of the pressed elements.
+                if (!r) alreadyPressed.push(...$.map($pressedSquares, s => cells$[indexOfButtonPressed].index(s)));
+                /* The target numbers corresponding to (the indexes of) the pressed squares along with their index. */
+                const pressedStageNumbers = alreadyPressed.map((n,i) => [stageNumbers[n], alreadyPressed[i]]);
+                /* A table where gets the positions are sorted by target number */
+                const arranged = pressedStageNumbers.sort((a,b)=>a[0]-b[0]);
+                /* note: cells*$* contains a $COLLECTION of ELEMENTS, not a $collection of $; same with table$ */
+                arranged.forEach((a,i) => $(cells$[indexOfButtonPressed][a[1]]).text(i+1));
             }
 
             /* when it tries to remove something, if that element was already removed, then it will fail to remove it
@@ -318,12 +349,10 @@
                 /* The page button whose table is just created will be shown. (ie "show the button")
                    All buttons are preset. */
                 $pageButtons.eq(numberOfTables).css("visibility", "visible");
-                /* Hoists the last layer created.
-                   It does so by calling the function as if the last page button was pressed. */
-                hoistLayer($pageButtons.eq(numberOfTables));
                 /* Color a cell. */
                 cells$[numberOfTables].click(e => {
                     const t = $(e.target);
+                    let removed = false;
                     if (t.css("background-color") === "rgba(0, 0, 0, 0)" && currentColor) { //fill
                         /* This only applies for stage 0 */
                         if (!indexOfButtonPressed) {
@@ -350,8 +379,23 @@
                         numbersShown[t.text()-1] = false;
                         t.text("");
                         t.css("background-color", "rgba(0, 0, 0, 0)");
+                        if (t.css("background-color") === "rgb(230, 230, 230)")
+                        {
+                            alreadyPressed.splice(alreadyPressed.indexOf(t), 1);
+                            removed = true;
+
+                            /* TODO: PULSA UN BLANCO, Y LUEGO PULSALO DE NUEVO */
+                        }
+                    }
+                    if (indexOfButtonPressed) {
+                        setCorrespondentNumbers(removed);
+                        if (removed) t.text("");
                     }
                 });
+                /* Hoists the last layer created.
+                   It does so by calling the function as if the last page button was pressed. */
+                hoistLayer($pageButtons.eq(numberOfTables));
+                console.log(indexOfButtonPressed);
                 /* Table ready: add it to the tree. */
                 $tablesContainer.append(tables$[numberOfTables]);
             }
@@ -360,14 +404,6 @@
             $layerButton.click(makeTable);
             //$(window).on("beforeunload", ()=>"");
             resetAll();
-
-            /* moar data. */
-            const stages = [
-                [5, 12, 1, 15, 14, 13, 7, 3, 9, 4, 6, 10, 16, 2, 8, 11],
-                [1, 14, 6, 7, 12, 15, 3, 10, 16, 4, 2, 11, 9, 8, 13, 5],
-                [16, 9, 7, 12, 6, 15, 3, 5, 11, 8, 13, 14, 2, 10, 1, 4],
-                [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
-            ];
         });
     </script>
 </head>
