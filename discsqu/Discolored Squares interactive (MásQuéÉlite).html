@@ -276,7 +276,7 @@
                 doTopTableChanges(indexOfPreviousButtonPressed);
             }
 
-            function doTopTableChanges(previous) {
+            function doTopTableChanges() {
                 /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
                 if (indexOfButtonPressed) {
                     $(tables$).each((i,e) => {
@@ -284,14 +284,7 @@
                     });
                     tables$[0].css("visibility", "hidden");
                     tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
-                    /* If the stage has already (a) white cell(s) */
-                    if (cells$[indexOfButtonPressed].filter( (_,c) => BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")).length > 0)
-                        setCorrespondentNumbers();
-                    /* Ensure that the previous stage has the Xs when overlapping other stages */
-                        cells$[previous].each(function() {
-                            const t = $(this);
-                            if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)")) t.text("X");
-                        })
+                    //setTableNumbers();
                 }
                 else {
                     $(tables$).each((i,e) => {
@@ -319,21 +312,27 @@
             }
 
             /* Set the numbers to the white cells when clicked. */
-            function setCorrespondentNumbers() {
+            function setTableNumbers() {
                 /* The target numbers for the current stage. */
                 const stageNumbers = stages[indexOfButtonPressed-1];
-                // The pressed ELEMENTS.
-                const $pressedSquares = cells$[indexOfButtonPressed].filter(function() {
-                    return BGof_IsEqualToColor($(this), "rgb(230, 230, 230)")
-                });
-                // The INDEX of the pressed elements.
-                alreadyPressed = [...$.map($pressedSquares, s => cells$[indexOfButtonPressed].index(s))];
-                /* The target numbers corresponding to (the indexes of) the pressed squares along with their index. */
-                const pressedStageNumbers = alreadyPressed.map((n,i) => [stageNumbers[n], alreadyPressed[i]]);
-                /* A table where gets the positions are sorted by target number */
-                const arranged = pressedStageNumbers.sort((a,b)=>a[0]-b[0]);
-                /* note: cells*$* contains a $COLLECTION of ELEMENTS, not a $collection of $; same with table$ */
-                arranged.forEach((a,i) => $(cells$[indexOfButtonPressed][a[1]]).text(i+1));
+                /* The text color of all the cells in that table */
+                const currentTextColor = cells$[indexOfButtonPressed].css("color");
+                cells$[indexOfButtonPressed].each((i,c) => {
+                    if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text(stageNumbers[i]);
+                    $(c).css("color", `${currentTextColor.replace("rgb", "rgba").replace(")", ", 0.5)")}`);
+                });/*
+                if (indexOfButtonPressed)
+                {
+                    cells$[indexOfButtonPressed-1].text(" ");
+                    console.log(cells$[indexOfButtonPressed-1].css("color"));
+                    
+                    cells$[indexOfButtonPressed].each((i,c) => {
+                        if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text(stageNumbers[i]);
+                        $(c).css("color", `${currentTextColor.replace("rgba", "rgb").replace(", 0.5)", ")")}`);
+                    });
+                }
+                else {
+                }*/
             }
 
             /* when it tries to remove something, if that element was already removed, then it will fail to remove it
@@ -382,6 +381,7 @@
                             }
                             let n = decideShownNumber();
                             t.text(n);
+                            t.css("color", "black");
                             colorsPressed[n-1] = currentColor;
                         }
                         /* Sets the cell to the color selected */
@@ -401,14 +401,12 @@
                         t.text("");
                         t.css("background-color", "rgba(0, 0, 0, 0)");
                     }
-                    if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)") || isWhiteDeselected)
-                        setCorrespondentNumbers();
                 });
+                /* Table ready: add it to the tree. */
+                $tablesContainer.append(tables$[numberOfTables]);
                 /* Hoists the last layer created.
                    It does so by calling the function as if the last page button was pressed. */
                 hoistLayer($pageButtons.eq(numberOfTables));
-                /* Table ready: add it to the tree. */
-                $tablesContainer.append(tables$[numberOfTables]);
             }
 
             $resetButton.click(resetAll);
