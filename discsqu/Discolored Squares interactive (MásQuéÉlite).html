@@ -10,7 +10,7 @@
     <script src="js/ktane-utils.js"></script>
     <script src="js/jquery.3.1.1.min.js"></script>
     <script src="js/ruleseed.js"></script>
-    <script src="live.js"></script>
+    <!--<script src="live.js"></script>-->
     <style>
         ul {
             padding-left: 1.5em;
@@ -209,6 +209,8 @@
             const $pageButtons = $("#pages").children();
             /* "Next stage" */
             const $layerButton = $("#new-layer");
+            /* The div which contains the tables/layers. */
+            const $tablesContainer = $("#interactive-container");
             /* Table template. */
             const $tableRef = $("div.interactive");
             $tableRef.css("display", "none");
@@ -218,8 +220,6 @@
             /* Table layers' cells/children.
                It isn't by itself a $, but it contains $s */
             let cells$ = [];
-            /* The div which contains the tables/layers. */
-            const $tablesContainer = $("#interactive-container");
             /* How many layers have I got right now? */
             let numberOfTables;
             /* The currently selected color. */
@@ -228,9 +228,10 @@
             let indexOfButtonPressed;
             /* The colors pressed in the 0th stage. It always has to be 4. */
             let colorsPressed = Array.from({length:4},e=>"");
-            /* A registry reflecting which numbers the table already has (again, in the 0th stage). */
-            let numbersShown = Array.from({length:4},e=>false);
             let alreadyPressed = [];
+            let restrictions = null;
+            /* Example: If the BG color of c is equal to the color grey (i.e. rgb(230, 230, 230)) */
+            const BGof_IsEqualToColor = ($element, color) => $element.css("background-color") === color;
             /* moar data. 
                I would've added this to the bottom but TDZ's exist*/
             const stages = [
@@ -240,12 +241,18 @@
                 [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
             ];
 
-            $colors.click(e => {
-                const t = $(e.target);
-                currentColor = t.css("background-color");
-                $colors.css("border", "3px solid"); //all elements
-                t.css("border", "solid 4px purple"); //one element
-            });
+            /* Select the color whose box is clicked */
+            function selectColor($colorBox) {
+                /* If there's any restriction, check it */
+                if (!restrictions[0] || restrictions.includes($colorBox[0]))
+                {
+                    currentColor = $colorBox.css("background-color");
+                    $colors.css("border", "3px solid"); //all elements
+                    $colorBox.css("border", "solid 4px purple"); //one element
+                }
+            }
+
+            $colors.click(e => selectColor($(e.target)));
 
             /* Sets the z-index of each present table to its index(+1) */
             const resetZIndex = () => $(tables$).each((i, el) => el.css("z-index", i));
@@ -258,6 +265,7 @@
             /* Hoists a layer to the very top.
                Note: "" = "default". */
             function hoistLayer($buttonClicked) {
+                let indexOfPreviousButtonPressed = indexOfButtonPressed ?? 0;
                 indexOfButtonPressed = $pageButtons.index($buttonClicked);
                 resetZIndex();
                 tables$[indexOfButtonPressed].css("z-index", "9999");
@@ -265,10 +273,10 @@
                 $pageButtons.css({"border": "","border-radius": ""}); //all elements
                 $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); //one element
 
-                doTopTableChanges();
+                doTopTableChanges(indexOfPreviousButtonPressed);
             }
 
-            function doTopTableChanges() {   
+            function doTopTableChanges(previous) {
                 /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
                 if (indexOfButtonPressed) {
                     $(tables$).each((i,e) => {
@@ -276,6 +284,14 @@
                     });
                     tables$[0].css("visibility", "hidden");
                     tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
+                    /* If the stage has already (a) white cell(s) */
+                    if (cells$[indexOfButtonPressed].filter( (_,c) => BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")).length > 0)
+                        setCorrespondentNumbers();
+                    /* Ensure that the previous stage has the Xs when overlapping other stages */
+                        cells$[previous].each(function() {
+                            const t = $(this);
+                            if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)")) t.text("X");
+                        })
                 }
                 else {
                     $(tables$).each((i,e) => {
@@ -285,31 +301,33 @@
                 }
                 /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
                 tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
-                /* Code for removing any squares but white ones. */
+                /* Restrict the color to only accept the current color and white */
+                const newSelectedColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), colorsPressed[indexOfButtonPressed-1]));
+                restrictions = [newSelectedColor[0], $colors[5]];
+                selectColor(newSelectedColor);
 
+                /* Code for removing any squares but white ones. */
                 if (indexOfButtonPressed <= 1) return;
 
-                const pressedNow = [];
                 cells$[indexOfButtonPressed-1].each(function(i) {
                     const t = $(this);
-                    if (t.css("background-color") !== "rgb(230, 230, 230)")
+                    if (!BGof_IsEqualToColor(t, "rgb(230, 230, 230)"))
                         t.css("background-color", "rgba(0, 0, 0, 0)");
                     else
-                    {
                         t.text("X");
-                    }
                 });
             }
 
-            function setCorrespondentNumbers(r) {
+            /* Set the numbers to the white cells when clicked. */
+            function setCorrespondentNumbers() {
                 /* The target numbers for the current stage. */
                 const stageNumbers = stages[indexOfButtonPressed-1];
                 // The pressed ELEMENTS.
                 const $pressedSquares = cells$[indexOfButtonPressed].filter(function() {
-                    return $(this).css("background-color") == "rgb(230, 230, 230)"
+                    return BGof_IsEqualToColor($(this), "rgb(230, 230, 230)")
                 });
                 // The INDEX of the pressed elements.
-                if (!r) alreadyPressed.push(...$.map($pressedSquares, s => cells$[indexOfButtonPressed].index(s)));
+                alreadyPressed = [...$.map($pressedSquares, s => cells$[indexOfButtonPressed].index(s))];
                 /* The target numbers corresponding to (the indexes of) the pressed squares along with their index. */
                 const pressedStageNumbers = alreadyPressed.map((n,i) => [stageNumbers[n], alreadyPressed[i]]);
                 /* A table where gets the positions are sorted by target number */
@@ -328,7 +346,6 @@
                 cells$ = [];
                 tables$ = [];
                 colorsPressed = Array.from({length:4},e=>"");
-                numbersShown = Array.from({length:4},e=>false);
                 currentColor = null;
                 numberOfTables = -1;
                 makeTable();
@@ -352,50 +369,44 @@
                 /* Color a cell. */
                 cells$[numberOfTables].click(e => {
                     const t = $(e.target);
-                    let removed = false;
+                    let isWhiteDeselected = false;
                     if (t.css("background-color") === "rgba(0, 0, 0, 0)" && currentColor) { //fill
                         /* This only applies for stage 0 */
                         if (!indexOfButtonPressed) {
                             /* No more than 4 buttons can be pressed on this layer, and only unique colors can be here. It also can't be the gray color. */
                             if (!colorsPressed.includes("") || colorsPressed.includes(currentColor) || currentColor === "rgb(230, 230, 230)") return;
-                            /* Returns the lowerst number that is not present on the table. (i.e. numbersShown) */
+                            /* Returns the lowerst number that is not present on the table. */
                             let decideShownNumber = () => {
                                 for (let i = 1; i <= 4; i++)
-                                    if (!numbersShown[i-1]) return i;
+                                    if (!colorsPressed[i-1]) return i;
                             }
                             let n = decideShownNumber();
                             t.text(n);
                             colorsPressed[n-1] = currentColor;
-                            numbersShown[n-1] = true;
                         }
                         /* Sets the cell to the color selected */
                         t.css("background-color", currentColor);
                     }
                     else { //clear
-                        /* You can't delete a color if that color is on the grid, BUT you can if it's the same color as the one you have selected. */
-                        if (colorsPressed.includes(currentColor) && t.css("background-color") !== currentColor) return;
-                        /* Resets that color on colorsPressed and numbersShown, as well as the cell's text and color. */
-                        colorsPressed[colorsPressed.indexOf(t.css("background-color"))] = "";
-                        numbersShown[t.text()-1] = false;
-                        t.text("");
-                        t.css("background-color", "rgba(0, 0, 0, 0)");
-                        if (t.css("background-color") === "rgb(230, 230, 230)")
+                        /* Resets that color on colorsPressed, as well as the cell's text and color. */
+                        if (!indexOfButtonPressed) {
+                            colorsPressed[colorsPressed.indexOf(t.css("background-color"))] = "";
+                        }
+                        if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)"))
                         {
                             alreadyPressed.splice(alreadyPressed.indexOf(t), 1);
-                            removed = true;
-
-                            /* TODO: PULSA UN BLANCO, Y LUEGO PULSALO DE NUEVO */
+                            t.text("");
+                            isWhiteDeselected = true;
                         }
+                        t.text("");
+                        t.css("background-color", "rgba(0, 0, 0, 0)");
                     }
-                    if (indexOfButtonPressed) {
-                        setCorrespondentNumbers(removed);
-                        if (removed) t.text("");
-                    }
+                    if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)") || isWhiteDeselected)
+                        setCorrespondentNumbers();
                 });
                 /* Hoists the last layer created.
                    It does so by calling the function as if the last page button was pressed. */
                 hoistLayer($pageButtons.eq(numberOfTables));
-                console.log(indexOfButtonPressed);
                 /* Table ready: add it to the tree. */
                 $tablesContainer.append(tables$[numberOfTables]);
             }
