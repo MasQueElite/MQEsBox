@@ -99,6 +99,7 @@
         }
         .dark div.interactive div {
             outline: 2px solid #ddd;
+            color: #ddd;
         }
         #color-pallet {
             display: grid;
@@ -203,28 +204,24 @@
         $(() => {
             /* The colors at the bottom of the table. */
             const $colors = $("#color-pallet").children();
-            /* "Reset" */
             const $resetButton = $("#reset");
             /* "Next stage" */
             const $layerButton = $("#new-layer");
             /* "0" "1" "2" "3" "4" */
             const $pageButtons = $("#pages").children();
-            /* The div which contains the tables/layers. */
             const $tablesContainer = $("#interactive-container");
-            /* Table template. */
             const $tableRef = $("div.interactive");
             $tableRef.css("display", "none");
             /* Table layers.
-               It isn't by itself a $, but it contains $s */
+               It isn't by itself a $, but it contains $'s. */
             let tables$ = [];
             /* Table layers' cells/children.
-               It isn't by itself a $, but it contains $s */
+               Item. */
             let cells$ = [];
-            /* How many layers have I got right now? Starting from 0*/
+            /* Starting from 0*/
             let numberOfTables;
-            /* The currently selected color. */
             let currentColor;
-            /* Which layer is the user now in? Corresponds to the respective button label */
+            /* Corresponds to the respective button label */
             let indexOfButtonPressed;
             /* Stores colors pressed in the 0th stage. (0-3) */
             let colorsPressed = Array.from({length:4},e=>"");
@@ -240,8 +237,10 @@
                 [16, 9, 7, 12, 6, 15, 3, 5, 11, 8, 13, 14, 2, 10, 1, 4],
                 [4, 11, 3, 14, 16, 12, 7, 8, 5, 2, 6, 9, 1, 13, 15, 10]
             ];
-            /* Sets the z-index of each present table to its index */
             const resetZIndex = () => $(tables$).each((i, el) => el.css("z-index", i));
+            const [whiteText, blackText] = ["rgba(221, 221, 221, 0.5)", "rgba(0, 0, 0, 0.5)"]
+            /* Quering the class in an event handler doesn't give reliable results. */
+            let hasDark = $("document.body").hasClass("dark");
 
             $colors.click(e=>selectColor($(e.target)));
             $pageButtons.click(e=>manageLayers($(e.target)));
@@ -254,7 +253,27 @@
                 }
             }
 
+            function managePreviousLayer(previous) {
+                /* Manages removing any squares but white ones. */
+                cells$[previous].each((_,c) => {
+                    const $c = $(c);
+                    if (!BGof_IsEqualToColor($c, "rgb(230, 230, 230)"))
+                    {
+                        $c.css("background-color", "rgba(0, 0, 0, 0)");
+                        $c.css("color", hasDark ? whiteText : blackText);
+                    }
+                    else
+                        $c.text("X");
+                });
+
+                /* Manages the table numbers (of the previous table/layer) */
+                cells$[previous].each((_,c) => {
+                    if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text("");
+                });
+            }
+
             function manageLayers($buttonClicked) {
+                if (indexOfButtonPressed) managePreviousLayer(indexOfButtonPressed);
                 indexOfButtonPressed = $pageButtons.index($buttonClicked);
 
                 hoistLayer(indexOfButtonPressed)
@@ -262,13 +281,12 @@
                 $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); //one element
 
                 /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
-                const tablesCopy = $.extend(true, [], tables$) //it eats the first element for some reason
+                const tablesCopy = $.extend(true, [], tables$) //it eats the first element for some reason.
                     , zerothTable = tables$[0]
                     , visibility = ["hidden", "visible"]
                     , iobp = +!!indexOfButtonPressed;
                 $(tablesCopy).each((_,e) => $(e).css("visibility", visibility[+iobp]));
                 $(zerothTable).css("visibility", visibility[+!iobp]);
-                //setTableNumbers();
 
                 doTopTableChanges();
             }
@@ -278,23 +296,36 @@
                 tables$[i].css("z-index", "9999"); //one element
             }
 
+            function selectNewColor(params) {
+                const newSelectedColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), colorsPressed[indexOfButtonPressed-1]));
+                /* Restrict the color to only accept the current color and white. */
+                restrictions = [newSelectedColor[0], $colors[5]];
+                selectColor(newSelectedColor);
+            }
+
             function doTopTableChanges() {
                 /* Changes the outline of the table depending on the stage button pressed and the color set at that stage in stage 0. */
                 tables$[indexOfButtonPressed].css("outline-color", colorsPressed[indexOfButtonPressed-1]);
-                /* Restrict the color to only accept the current color and white */
-                const newSelectedColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), colorsPressed[indexOfButtonPressed-1]));
-                restrictions = [newSelectedColor[0], $colors[5]];
-                selectColor(newSelectedColor);
+                selectNewColor();
 
-                if (indexOfButtonPressed <= 1) return;
-                
-                /* Code for removing any squares but white ones. */
-                cells$[indexOfButtonPressed-1].each(function(i) {
-                    const t = $(this);
-                    if (!BGof_IsEqualToColor(t, "rgb(230, 230, 230)"))
-                        t.css("background-color", "rgba(0, 0, 0, 0)");
-                    else
-                        t.text("X");
+                if (indexOfButtonPressed <= 0) return;
+                setTableNumbers();
+            }
+
+            function isWhiteOnAnyLayer(position) {
+                for (let i = 1; i < cells$.length; i++)
+                    if (BGof_IsEqualToColor($(cells$[i][position]), "rgb(230, 230, 230)"))
+                        return true;
+                return false;
+            }
+
+            function resetAllNumbersColors() {
+                $(cells$).each((_,cells) => {
+                        cells.each((i,c) => {
+                            if (!isWhiteOnAnyLayer(i)) {
+                                $(c).css("color", hasDark ? whiteText : blackText);
+                            }
+                        });
                 });
             }
 
@@ -305,8 +336,10 @@
                 /* The text color of all the cells in that table */
                 const currentTextColor = cells$[indexOfButtonPressed].css("color");
                 cells$[indexOfButtonPressed].each((i,c) => {
-                    if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text(stageNumbers[i]);
-                    $(c).css("color", `${currentTextColor.replace("rgb", "rgba").replace(")", ", 0.5)")}`);
+                    if (!isWhiteOnAnyLayer(i)) {
+                        $(c).text(stageNumbers[i]);
+                        $(c).css("color", `${currentTextColor.replace("rgb", "rgba").replace(")", ", 0.5)")}`);
+                    }
                 });
             }
 
@@ -319,8 +352,9 @@
                 tables$.forEach(t => t.remove());
                 cells$ = [];
                 tables$ = [];
-                colorsPressed = Array.from({length:4},e=>"");
+                colorsPressed = Array.from({length:4},()=>"");
                 currentColor = null;
+                indexOfButtonPressed = null;
                 numberOfTables = -1;
                 makeTable();
             }
@@ -346,13 +380,28 @@
                     }
                     /* Sets the cell to the color selected */
                     t.css("background-color", currentColor);
+                    if (indexOfButtonPressed) {
+                        if (!BGof_IsEqualToColor(t, "rgba(0, 0, 0, 0)")) {
+                            t.css("color", "rgba(0, 0, 0, 0.5)");
+                            if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)"))
+                            {
+                                t.css("color", "rgb(0, 0, 0)");
+                                t.text("X");
+                            }
+                        }
+                    }
                 }
                 else { //clear
-                    if (!indexOfButtonPressed) {
-                        colorsPressed[colorsPressed.indexOf(t.css("background-color"))] = "";
-                    }
-                    t.text("");
                     t.css("background-color", "rgba(0, 0, 0, 0)");
+                    t.css("color", hasDark ? whiteText : blackText);
+                    if (!indexOfButtonPressed) {
+                        colorsPressed[t.text()-1] = "";
+                        t.text("");
+                    }
+                    else {
+                        t.text("");
+                        setTableNumbers(true);
+                    }
                 }
             }
 
@@ -377,6 +426,16 @@
 
             $resetButton.click(resetAll);
             $layerButton.click(makeTable);
+            const o = new MutationObserver(() => {
+                hasDark = !hasDark;
+                cells$[indexOfButtonPressed].each((_,c) => {
+                    if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) {
+                        $(c).css("color", "");
+                    }
+                });
+                resetAllNumbersColors();
+            });
+            o.observe(document.body, {attributes:true});
             //$(window).on("beforeunload", ()=>"");
             resetAll();
         });
