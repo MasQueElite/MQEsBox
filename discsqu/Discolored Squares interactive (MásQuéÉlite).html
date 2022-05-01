@@ -101,6 +101,9 @@
             outline: 2px solid #ddd;
             color: #ddd;
         }
+        div.interactive div:hover {
+            border: 4px solid orangered;
+        }
         #color-pallet {
             display: grid;
             grid-template-columns: repeat(6, 3rem);
@@ -204,6 +207,7 @@
         $(() => {
             /* The colors at the bottom of the table. */
             const $colors = $("#color-pallet").children();
+            let isMouseOnColors = false;
             const $resetButton = $("#reset");
             /* "Next stage" */
             const $layerButton = $("#new-layer");
@@ -240,7 +244,7 @@
             const resetZIndex = () => $(tables$).each((i, el) => el.css("z-index", i));
             const [whiteText, blackText] = ["rgba(221, 221, 221, 0.5)", "rgba(0, 0, 0, 0.5)"]
             /* Quering the class in an event handler doesn't give reliable results. */
-            let hasDark = $("document.body").hasClass("dark");
+            let hasDark = $("body").hasClass("dark");
 
             $colors.click(e=>selectColor($(e.target)));
             $pageButtons.click(e=>manageLayers($(e.target)));
@@ -266,7 +270,6 @@
                         $c.text("X");
                 });
 
-                /* Manages the table numbers (of the previous table/layer) */
                 cells$[previous].each((_,c) => {
                     if (!BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text("");
                 });
@@ -279,6 +282,9 @@
                 hoistLayer(indexOfButtonPressed)
                 $pageButtons.css({"border": "","border-radius": ""}); //all elements
                 $buttonClicked.css({"border": "2px dashed","border-radius": "5px"}); //one element
+                cells$[indexOfButtonPressed].each((_,c) => {
+                    if (BGof_IsEqualToColor($(c), "rgb(230, 230, 230)")) $(c).text("");
+                });
 
                 /* If 0 is pressed: show only the 0th stage. Otherwise show all but the 0th stage. */
                 const tablesCopy = $.extend(true, [], tables$) //it eats the first element for some reason.
@@ -321,11 +327,11 @@
 
             function resetAllNumbersColors() {
                 $(cells$).each((_,cells) => {
-                        cells.each((i,c) => {
-                            if (!isWhiteOnAnyLayer(i)) {
-                                $(c).css("color", hasDark ? whiteText : blackText);
-                            }
-                        });
+                    cells.each((i,c) => {
+                        if (!isWhiteOnAnyLayer(i)) {
+                            $(c).css("color", hasDark ? whiteText : blackText);
+                        }
+                    });
                 });
             }
 
@@ -386,7 +392,7 @@
                             if (BGof_IsEqualToColor(t, "rgb(230, 230, 230)"))
                             {
                                 t.css("color", "rgb(0, 0, 0)");
-                                t.text("X");
+                                t.text("");
                             }
                         }
                     }
@@ -424,6 +430,17 @@
                 manageLayers($pageButtons.eq(numberOfTables));
             }
 
+            function manageWheelSelection(direction) {
+                const wrap05 = n => (n + 6) % 6 //range: [0, 5], n € Z
+                    , indexOfCurrentColor = $colors.filter((_,c) => BGof_IsEqualToColor($(c), currentColor)).index();
+                let newSelectedColor;
+                /* If there's nothing selected, default */
+                if (indexOfCurrentColor < 0) newSelectedColor = $colors[0];
+                /* neg -> -1 ; pos -> +1*/
+                else newSelectedColor = $colors[wrap05(indexOfCurrentColor-[-1, +1][Math.ceil(Math.sin(direction))])];
+                selectColor($(newSelectedColor));
+            }
+
             $resetButton.click(resetAll);
             $layerButton.click(makeTable);
             const o = new MutationObserver(() => {
@@ -436,6 +453,13 @@
                 resetAllNumbersColors();
             });
             o.observe(document.body, {attributes:true});
+            window.addEventListener("wheel", e => {
+                if (!isMouseOnColors || indexOfButtonPressed) return;
+                manageWheelSelection(e.deltaY);
+                e.preventDefault();
+            }, {passive: false});
+            $tablesContainer.mouseenter(()=>isMouseOnColors=true);
+            $tablesContainer.mouseleave(()=>isMouseOnColors=false);
             //$(window).on("beforeunload", ()=>"");
             resetAll();
         });
@@ -518,7 +542,7 @@
                 <ul>
                     <li>Click a color and then on a cell to color that cell with said color.</li>
                     <li>Click on that cell again with the same color to toggle its 'pressed' state.</li>
-                    <li>Right-click on that cell to delete its color (it won't delete the selection).</li>
+                    <li>Tip: on stage 0, you can select colors with the wheel.</li>
                     <li>Alternatively, you can also click the blank square to delete the color.</li>
                     <li>Create layers on top of each other by pressing 'Next stage'.</li>
                     <li>You can switch to other stage/layer by pressing the numbered buttons.</li>
