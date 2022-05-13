@@ -1,0 +1,21 @@
+@font-face {
+    font-family: "7 segment-display";
+    src: url("./7segments.ttf");
+}
+
+body, input, #clock {
+    font-family: "7 segment-display", monospace;
+    font-size: xx-large;
+}
+
+input {
+    width: 2.1rem;
+    font-family: "7 segment-display";
+    text-align: center;
+    height: 100%;
+}
+
+#stats>*, #clock {
+    display: inline-flex;
+    align-items: center;
+}
