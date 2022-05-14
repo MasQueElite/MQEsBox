@@ -66,6 +66,9 @@ const areAllInputsFilled = () => Array.from(document.querySelectorAll("input")).
 const areAllNumbers = () => Array.from(document.querySelectorAll("input")).every(i => !Number.isNaN(+i.value));
 
 document.querySelector("#bStart").addEventListener("click", () => {
+    console.log(Array.from(document.querySelectorAll("input")).map(i => i.value));
+    console.log(Array.from(document.querySelectorAll("input")).map(i => Boolean(i.value)));
+    console.log(areAllInputsFilled());
     if (!areAllInputsFilled()) {
         putTempMessage("Not all inputs have been filled!");
         return;
