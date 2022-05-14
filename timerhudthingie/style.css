@@ -3,19 +3,90 @@
     src: url("./7segments.ttf");
 }
 
-body, input, #clock {
-    font-family: "7 segment-display", monospace;
-    font-size: xx-large;
+#container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 350px;
+    gap: 5px;
+}
+
+.char {
+    margin: 0 7px;
 }
 
 input {
     width: 2.1rem;
-    font-family: "7 segment-display";
     text-align: center;
     height: 100%;
+    border: solid 1px #555;
+    padding: 2px;
 }
 
 #stats>*, #clock {
     display: inline-flex;
     align-items: center;
+}
+
+#stats {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+#clock {
+    margin-top: 15px;
+}
+
+#hud, #strikes-input, #solves-input, #minutes, #seconds {
+    background-color: #171717E0;
+    font-family: "7 segment-display";
+    font-size: xx-large;
+    min-height: 35px;
+}
+
+#hud {
+    padding: 15px;
+    text-align: center;
+    border-radius: 15px;
+}
+
+#strikes-container, #clock, #strikes-input, #minutes, #seconds {
+    color: red;
+}
+
+#solves-container, #solves-input {
+    color: lime;
+}
+
+#pace-container {
+    color: #828282;
+}
+
+#buttons {
+    display: flex;
+    flex-basis: 50px;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background-color: wheat;
+    padding: 5px 0 10px;
+    border-radius: 15px;
+}
+
+#buttons>button {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: small;
+    background-color: lightgray;
+}
+
+#buttons>button:hover {
+    background-color: darkgray;
+    cursor: pointer;
+}
+
+#buttons>button:active {
+    background-color: gray;
 }

@@ -19,8 +19,8 @@ class HUD {
         }
     }
     printTimer() {
-        document.querySelector("#minutes").value = this.minutes;
-        document.querySelector("#seconds").value = this.seconds;
+        document.querySelector("#minutes").value = (this.minutes+"").padStart(2, '0');
+        document.querySelector("#seconds").value = (this.seconds+"").padStart(2, '0');
     }
     updateTimer() {
         this.wrapTimer();
@@ -31,6 +31,7 @@ class HUD {
             this.seconds -= 1;
             this.updateTimer();
             updatePaceMeter();
+            if (!this.currentTimeInSeconds()) this.stopTimer();
         }, 1000*(2-this.rate));
     }
     stopTimer() {
@@ -52,26 +53,47 @@ function updatePaceMeter() {
     document.querySelector("#pace").textContent = Math.round(hud.calculatePace()*100);
 }
 
+function putTempMessage(msg) {
+    const p = document.createElement("p");
+    p.textContent = msg;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
+}
+
 let hud = null;
 
 const areAllInputsFilled = () => Array.from(document.querySelectorAll("input")).every(i => i.value);
 const areAllNumbers = () => Array.from(document.querySelectorAll("input")).every(i => !Number.isNaN(+i.value));
 
 document.querySelector("#bStart").addEventListener("click", () => {
-    if (!areAllInputsFilled() || !areAllNumbers()) return;
+    if (!areAllInputsFilled()) {
+        putTempMessage("Not all inputs have been filled!");
+        return;
+    }
+    if (!areAllNumbers()) {
+        putTempMessage("Please, put numbers only");
+        return;
+    }
     generateHUD();
     hud.startTimer();
+    hud.updateTimer();
+    updatePaceMeter();
 });
 
 document.querySelector("#bSolve").addEventListener("click", () => {
+    if (!hud) return;
+    if (hud.modulesSolved >= hud.totalModules) return;
     hud.modulesSolved++;
     document.querySelector("#solves").textContent = hud.modulesSolved;
     updatePaceMeter();
 });
 
 document.querySelector("#bStrike").addEventListener("click", () => {
+    if (!hud) return;
+    if (hud.strikes >= hud.totalStrikes) return;
     hud.strikes++;
     document.querySelector("#strikes").textContent = hud.strikes;
+    if (!this.currentTimeInSeconds()) return;
     if (hud.rate <= 2) {
         hud.stopTimer();
         hud.startTimer();

@@ -6,21 +6,24 @@
         <title>KTaNE HUD</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="style.css">
-        <!--<script src="live.js"></script>-->
+        <script src="live.js"></script>
         <script src="script.js" defer></script>
     </head>
     <body>
-        <div id="stats">
-            <span><span id="strikes">0</span>/<input type="text" id="strikes-input"></span>
-            <span><span id="solves">0</span>/<input type="text" id="solves-input"></span>
-            <span><span id="pace">0</span>%</span>
+        <div id="container">
+            <div id="hud">
+                <div id="stats">
+                    <span id="strikes-container"><span id="strikes">0</span><span class="char">/</span><input type="text" id="strikes-input"></span>
+                    <span id="solves-container"><span id="solves">0</span><span class="char">/</span><input type="text" id="solves-input"></span>
+                    <span id="pace-container"><span id="pace">0</span><span class="char">%</span></span>
+                </div>
+                <div id="clock"><input type="text" id="minutes"><span class="char">:</span><input type="text" id="seconds"></div>
+            </div>
+            <div id="buttons">
+                <button id="bStart">Start</button>
+                <button id="bSolve">Add solve</button>
+                <button id="bStrike">Add strike</button>
+            </div>
         </div>
-        <div id="clock">
-            <input type="text" id="minutes">:<input type="text" id="seconds">
-        </div>
-        <br>
-        <button id="bStart">Start</button>
-        <button id="bSolve">Add solve</button>
-        <button id="bStrike">Add strike</button>
     </body>
 </html>
