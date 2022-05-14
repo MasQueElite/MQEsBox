@@ -1,7 +1,7 @@
 class HUD {
     constructor(strikes, modules, minutes, seconds) {
-        this.totalStrikes = strikes;
-        this.totalModules = modules;
+        this.totalStrikes = +strikes;
+        this.totalModules = +modules;
         this.strikes = 0;
         this.modulesSolved = 0;
         this.minutes = +minutes;
@@ -66,6 +66,7 @@ const areAllInputsFilled = () => Array.from(document.querySelectorAll("input")).
 const areAllNumbers = () => Array.from(document.querySelectorAll("input")).every(i => !Number.isNaN(+i.value));
 
 document.querySelector("#bStart").addEventListener("click", () => {
+    if (hud) return;
     console.log(Array.from(document.querySelectorAll("input")).map(i => i.value));
     console.log(Array.from(document.querySelectorAll("input")).map(i => Boolean(i.value)));
     console.log(areAllInputsFilled());
@@ -88,19 +89,22 @@ document.querySelector("#bSolve").addEventListener("click", () => {
     if (hud.modulesSolved >= hud.totalModules) return;
     hud.modulesSolved++;
     document.querySelector("#solves").textContent = hud.modulesSolved;
+    if (hud.modulesSolved === hud.totalModules) hud.stopTimer();
+    console.log(hud.modulesSolved, hud.totalModules);
     updatePaceMeter();
 });
 
 document.querySelector("#bStrike").addEventListener("click", () => {
     if (!hud) return;
     if (hud.strikes >= hud.totalStrikes) return;
+    if (hud.modulesSolved >= hud.totalModules) return;
     hud.strikes++;
     document.querySelector("#strikes").textContent = hud.strikes;
-    if (!this.currentTimeInSeconds()) return;
+    if (!hud.currentTimeInSeconds()) return;
     if (hud.rate <= 2) {
+        hud.rate += 0.25;
         hud.stopTimer();
         hud.startTimer();
-        hud.rate += 0.25;
     }
     updatePaceMeter();
 });
