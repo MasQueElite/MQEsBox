@@ -15,12 +15,16 @@
     margin: 0 7px;
 }
 
-input {
+#hud input {
     width: 2.1rem;
     text-align: center;
     height: 100%;
     border: solid 1px #555;
     padding: 2px;
+}
+
+#clock input {
+    padding: 3px;
 }
 
 #stats>*, #clock {
@@ -51,6 +55,14 @@ input {
     border-radius: 15px;
 }
 
+#pace {
+    letter-spacing: 2px;
+}
+
+#percentage {
+    margin-left: -5px;
+}
+
 #strikes-container, #clock, #strikes-input, #minutes, #seconds {
     color: red;
 }
@@ -61,6 +73,8 @@ input {
 
 #pace-container {
     color: #828282;
+    display: inline-block;
+    width: 3em;
 }
 
 #buttons {

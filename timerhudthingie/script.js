@@ -46,7 +46,7 @@ class HUD {
 }
 
 function generateHUD() {
-    hud = new HUD(...Array.from(document.querySelectorAll("input")).map(i => i.value));
+    hud = new HUD(...Array.from(document.querySelectorAll("#hud input")).map(i => i.value));
 }
 
 function updatePaceMeter() {
@@ -62,14 +62,14 @@ function putTempMessage(msg) {
 
 let hud = null;
 
-const areAllInputsFilled = () => Array.from(document.querySelectorAll("input")).every(i => i.value);
-const areAllNumbers = () => Array.from(document.querySelectorAll("input")).every(i => !Number.isNaN(+i.value));
+const areAllInputsFilled = () => Array.from(document.querySelectorAll("#hud input")).every(i => i.value);
+const areAllNumbers = () => Array.from(document.querySelectorAll("#hud input")).every(i => !Number.isNaN(+i.value));
 
 document.querySelector("#bStart").addEventListener("click", () => {
     if (hud) return;
-    console.log(Array.from(document.querySelectorAll("input")).map(i => i.value));
-    console.log(Array.from(document.querySelectorAll("input")).map(i => Boolean(i.value)));
-    console.log(areAllInputsFilled());
+    //console.log(Array.from(document.querySelectorAll("#hud input")).map(i => i.value));
+    //console.log(Array.from(document.querySelectorAll("#hud input")).map(i => Boolean(i.value)));
+    //console.log(areAllInputsFilled());
     if (!areAllInputsFilled()) {
         putTempMessage("Not all inputs have been filled!");
         return;
@@ -90,9 +90,11 @@ document.querySelector("#bSolve").addEventListener("click", () => {
     hud.modulesSolved++;
     document.querySelector("#solves").textContent = hud.modulesSolved;
     if (hud.modulesSolved === hud.totalModules) hud.stopTimer();
-    console.log(hud.modulesSolved, hud.totalModules);
+    //console.log(hud.modulesSolved, hud.totalModules);
     updatePaceMeter();
 });
+
+//TODO: MAKE IT SO IT ACCEPTS 100+ SOLVES AND 100+ MINS
 
 document.querySelector("#bStrike").addEventListener("click", () => {
     if (!hud) return;
@@ -101,17 +103,22 @@ document.querySelector("#bStrike").addEventListener("click", () => {
     hud.strikes++;
     document.querySelector("#strikes").textContent = hud.strikes;
     if (!hud.currentTimeInSeconds()) return;
-    if (hud.rate <= 2) {
-        hud.rate += 0.25;
+    const rates = [,1.2,1.33,1.425,1.498];
+    if (rates[hud.strikes])
+    {
+        hud.rate = rates[hud.strikes];
         hud.stopTimer();
         hud.startTimer();
+        console.log(1000*(2-hud.rate));
     }
     updatePaceMeter();
 });
 
-document.querySelectorAll("input").forEach(input => {
-    input.addEventListener("input", e => {
+document.querySelectorAll("#hud input").forEach(input => {
+    input.addEventListener("input", () => {
         if (input.value.length > 2) input.value = input.value.slice(0,2);
-        e.preventDefault();
+        if (input === document.querySelector("#seconds")) {
+            if (+input.value >= 60) input.value = input.value.slice(1,2);
+        }
     })
 });
