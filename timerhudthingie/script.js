@@ -67,9 +67,6 @@ const areAllNumbers = () => Array.from(document.querySelectorAll("#hud input")).
 
 document.querySelector("#bStart").addEventListener("click", () => {
     if (hud) return;
-    //console.log(Array.from(document.querySelectorAll("#hud input")).map(i => i.value));
-    //console.log(Array.from(document.querySelectorAll("#hud input")).map(i => Boolean(i.value)));
-    //console.log(areAllInputsFilled());
     if (!areAllInputsFilled()) {
         putTempMessage("Not all inputs have been filled!");
         return;
@@ -90,11 +87,8 @@ document.querySelector("#bSolve").addEventListener("click", () => {
     hud.modulesSolved++;
     document.querySelector("#solves").textContent = hud.modulesSolved;
     if (hud.modulesSolved === hud.totalModules) hud.stopTimer();
-    //console.log(hud.modulesSolved, hud.totalModules);
     updatePaceMeter();
 });
-
-//TODO: MAKE IT SO IT ACCEPTS 100+ SOLVES AND 100+ MINS
 
 document.querySelector("#bStrike").addEventListener("click", () => {
     if (!hud) return;
@@ -116,7 +110,7 @@ document.querySelector("#bStrike").addEventListener("click", () => {
 
 document.querySelectorAll("#hud input").forEach(input => {
     input.addEventListener("input", () => {
-        if (input.value.length > 2) input.value = input.value.slice(0,2);
+        if (input.value.length > 2) input.value = input.value.slice(0,3);
         if (input === document.querySelector("#seconds")) {
             if (+input.value >= 60) input.value = input.value.slice(1,2);
         }
